@@ -1,0 +1,12 @@
+info about movies (imdb.com)
+{command} [Name/*/id/top250] (Name/Number of points)
+*/{command} A Beautiful Mind
+bot would search a movie with name "A Beautiful Mind"
+*/{command} 530
+bot would show the page of the movie with id 530 (A Beautiful Mind)
+*/{command} * 2012
+bot would search a movie with name "2012"
+*/{command} top250
+bot would show IMDb Top 250 Movies
+*/{command} top250 25
+bot would show the 1st 25 of IMDb Top 250 Movies

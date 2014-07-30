@@ -1,0 +1,10 @@
+google translate
+{command} (lang_from/auto/*) (lang_to) (text)
+*/{command}
+bot would show supported languages
+*/{command} en ru hello world
+bot would translate "hello world" to russian
+*/{command} auto ru hello world
+lang_from would detected automatically
+*/{command} *
+bot would show next translation

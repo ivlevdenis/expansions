@@ -1,0 +1,6 @@
+lue sitaatteja bash.org:n sivustosta (englanniksi)
+{command} (sitaatin_numero)
+*/{command}
+botti näyttää satummaisen sitaatin
+*/{command} 30456
+botti näyttää sitaatin numero 30456

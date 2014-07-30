@@ -1,0 +1,10 @@
+käännä teksti Google Translate:n kautta
+{command} (kielestä/auto/*) (kieliin) (joku_teksti)
+*/{command}
+botti näyttää kielet saatavilla
+*/{command} fi en mitä kuuluu
+botti kääntää "mitä kuuluu" englanniksi
+*/{command} auto fi hello world
+alkuperäinen kieli on arvattu automaattisesti
+*/{command} *
+botti näyttää seuravan käännöksen variantin

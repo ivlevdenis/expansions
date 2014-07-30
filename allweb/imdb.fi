@@ -1,0 +1,12 @@
+tiedot elokuvasta imdb.com:n sivustosta
+{command} [nimi/*/tunniste/top250] (nimi/kohtien_määrä)
+*/{command} A Beautiful Mind
+botti etsii leffa сnimellä "A Beautiful Mind"
+*/{command} 0268978
+botti näyttää leffaa, joten tunniste on 0268978 (A Beautiful Mind)
+*/{command} * 2012
+botti pääsee etsimään leffaa nimellä "2012"
+*/{command} top250
+botti näyttää IMDb:n Top 250
+*/{command} top250 25
+botti näyttää ensimmäiset 25 leffaa IMDb:n Top 250:sta

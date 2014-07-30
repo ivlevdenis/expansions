@@ -1,0 +1,4 @@
+url shortener (powered by is.gd)
+{command} [url]
+*/{command} http://code.google.com/p/blacksmith-2/
+bot would shorten url to http://is.gd/FntYVl

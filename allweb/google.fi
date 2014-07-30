@@ -1,0 +1,6 @@
+Google-haku
+{command} [joku_teksti/*]
+*/{command} bla bla
+botti näyttää ensimmäisen hukun tuloksen
+*/{command} *
+botti näyttää seuravan tuloksen

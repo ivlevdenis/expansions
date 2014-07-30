@@ -1,0 +1,6 @@
+google search
+{command} [text/*]
+*/{command} blah blah
+bot would show 1st search result
+*/{command} *
+bot would show next result

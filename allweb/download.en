@@ -1,0 +1,8 @@
+file downloader
+{command} [url] (folder) (filename)
+*/{command} http://blacksmith-2.googlecode.com/files/Black-2.30.r71.zip
+bot would download Black-2.30.r71.zip (for superadmins loads into bot's root folder)
+*/{command} http://blacksmith-2.googlecode.com/files/Black-2.30.r71.zip Zip
+bot would put file into "Zip" (only for superadmins, otherwise loads into "Downloads")
+*/{command} http://blacksmith-2.googlecode.com/files/Black-2.30.r71.zip Downloads Black-2.zip
+bot would put file into "Downloads" with name "Black-2.zip"

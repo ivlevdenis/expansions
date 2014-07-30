@@ -1,0 +1,6 @@
+lue tosiasioita Chuck Norrisista chucknorrisfacts.com:n sivustosta
+{command} (tosiasian_numero)
+*/{command}
+botti näytää sattunnaisen tosiasian Chuck Norrisista
+*/{command} 207
+botti näyttää tosiasian numero 207

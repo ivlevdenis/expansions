@@ -1,0 +1,8 @@
+tiedostojen lataaminen
+{command} [linkki] (kansio) (tiedoston_nimi)
+*/{command} http://blacksmith-2.googlecode.com/files/Black-2.30.r71.zip
+botti lataa Black-2.30.r71.zip:n (jos oot superadmin sit lataa botin peruskansioon)
+*/{command} http://blacksmith-2.googlecode.com/files/Black-2.30.r71.zip Zip
+botti lataa kansioon "Zip" (vain jos sulla on koko pääsy, muuten lataa kansioon "Downloads")
+*/{command} http://blacksmith-2.googlecode.com/files/Black-2.30.r71.zip Downloads Black-2.zip
+botti lataa tiedoston kansioon "Downloads" nimellä "Black-2.zip"
