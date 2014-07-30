@@ -1,0 +1,6 @@
+käännä tekstia, jos unohdit vaihtaa näppäimistöasettelun (venäläjä<->suomi)
+{command} (joku_teksti)
+*/{command}
+botti kääntää viimeisen viestin
+*/{command} ghbdtn
+botti kääntää "ghbdtn" -> привет
