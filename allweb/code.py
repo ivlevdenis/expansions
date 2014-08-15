@@ -996,7 +996,9 @@ class expansion_temp(expansion):
                 answer = AnsBase[2]
         else:
             answer = AnsBase[1]
-        Answer(answer, stype, source, disp)
+        Answer('Скинул в личку!', stype, source, disp)
+        Message(source[0], answer, disp)
+        #Answer(answer, stype, source, disp)
 
     def command_yandex_market(self, stype, source, body, disp):
         if body:

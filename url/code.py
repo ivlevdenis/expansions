@@ -8,58 +8,83 @@
 import re
 import os
 import requests
-from lxml.html import parse, etree, HTMLParser
+from lxml import html
+
 
 def html_decode(s):
-    """
-    Returns the ASCII decoded version of the given HTML string. This does
-    NOT remove normal HTML tags like <p>.
-    """
-    htmlCodes = (("'", '&#39;'), ('"', '&quot;'), ('>', '&gt;'), ('<', '&lt;'), ('&', '&amp;'))
-    for code in htmlCodes:
-        s = s.replace(code[1], code[0])
-    return s
+    # htmlCodes = (
+    #     (u"'", u'&#39;'), (u'"', u'&quot;'), (u'>', u'&gt;'), (u'<', u'&lt;'), (u'&', u'&amp;'), (u' ', u'&nbsp;'),
+    #     (u'—', u'&mdash;'), (u'!', u'&#33;'))
+    # for code in htmlCodes:
+    #     s = s.replace(code[1], code[0])
+    return html.fromstring(s).text
+
+
+def parsing(txt):
+    title = re.search('<title[^>]*>([^<]+)</title>', txt, re.IGNORECASE)
+    if title:
+        title = title.group(1)
+        title = re.sub('\s+', ' ', title, re.IGNORECASE)
+        return html_decode(title)
+    else:
+        return u'Не могу стащить заголовок :('
+
+
+headers = {
+    'Accept-Encoding': 'gzip, deflate',
+    'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:31.0) Gecko/20100101 Firefox/31.0',
+    'Connection': 'keep-alive',
+    'Cache-Control': 'max-age=0'
+}
+
+image_str = u'Изображение'
+video_str = u'Видео'
+mime_answers = {
+    'image': image_str,
+    'video': video_str
+}
+
 
 def str_fsize(sz):
     """
-    Formats file size as string (i.e., 1.2 Mb)
+    Formats file size as string (i.e., 1.25 Mb)
     """
     if sz < 1024:
-        return '%.2f байт' % sz
+        return u'%.2f байт' % sz
     sz /= 1024.0
     if sz < 1024:
-        return '%.2f КБ' % sz
+        return u'%.2f КБ' % sz
     sz /= 1024.0
     if sz < 1024:
-        return '%.2f МБ' % sz
+        return u'%.2f МБ' % sz
     sz /= 1024.0
     if sz < 1024:
-        return '%.2f ГБ' % sz
+        return u'%.2f ГБ' % sz
     sz /= 1024.0
-    return '%.2f ТБ' % sz
+    return u'%.2f ТБ' % sz
 
 
-image_str = 'Изображение'
-video_str = 'Видеозапись'
-audio_str = 'Аудиозапись'
-mime_answers = {
-    'image': image_str,
-    'video': video_str,
-    'audio': audio_str
-}
+def get_headers(url):
+    r = requests.head(url)
+    if r.status_code != requests.codes.ok:
+        r.close()
+        r = requests.get(url, verify=False)
+        r.close()
+    return r.headers
 
-def parsing_lxml_fs(string):
-    parser = HTMLParser()
-    tree = etree.HTML(string, parser)
-    texts = tree.xpath("string(//head//title)")
-    return texts
 
-def parsing(txt):
-    title = re.search(r'<title[^>]*>([^<]+)</title>', txt, re.IGNORECASE)
-    if title:
-        return html_decode(re.sub(r'\s+', ' ', title.group(1), re.IGNORECASE))
-    else:
-        return 'Не могу стащить заголовок :('
+def get_content(url, enc):
+    r = requests.get(url, headers=headers)
+    if not r.content:
+        r.close()
+        r = requests.post(url, headers=headers)
+    if not enc or (enc.lower() != str(requests.utils.get_encodings_from_content(r.text)[0]).lower()):
+        enc = requests.utils.get_encodings_from_content(r.text)[0]
+    r.encoding = enc
+    r.close()
+    cont = unicode(r.text)
+    return cont
+
 
 class expansion_temp(expansion):
     def __init__(self, name):
@@ -68,48 +93,44 @@ class expansion_temp(expansion):
 
     def urlParser(self, body, begin_string):
         url_list = re.findall(
-            u'http[s]?://(?:[а-яА-ЯёЁa-zA-Z0-9]|[$-_@.&+]|[!*\(\),]|(?:%[а-яА-ЯёЁa-zA-Z0-9][а-яА-ЯёЁa-zA-Z0-9]))+',
+            r'http[s]?://(?:[а-яА-ЯёЁa-zA-Z0-9]|[$-_@.&+]|[!*\(\),]|(?:%[а-яА-ЯёЁa-zA-Z0-9][а-яА-ЯёЁa-zA-Z0-9]))+',
             body,
             re.IGNORECASE)
         # url_list = re.findall(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', body,
-        #                      re.IGNORECASE)
+        # re.IGNORECASE)
         ans = ""
         if url_list:
             for x in url_list:
                 try:
-                    r = requests.head(x, verify=False)
-                    r.close()
-                    if r.status_code == 501:
-                        r = requests.get(x, verify=False)
-                    if r.status_code == requests.codes.ok:
-                        ct = r.headers.get('content-type')
+                    head = get_headers(x)
+                    if head:
+                        ct = head.get('content-type')
                         if 'text/html' in ct:
-                            t = requests.get(x, verify=False)
-                            if requests.utils.get_encodings_from_content(t.text):
-                                t.encoding = ''.join(requests.utils.get_encodings_from_content(t.text)[0])
-                            title = parsing_lxml_fs(t.text)
-                            ans = "\n".join([ans, title])
-                            t.close()
+                            title = parsing(get_content(x, requests.utils.get_encoding_from_headers(head)))
+                            ans = u"\n".join([ans, title])
                         else:
                             if str(ct).split('/')[0] in mime_answers.keys():
                                 ans_prefix = mime_answers[str(ct).split('/')[0]] + ':'
                             else:
-                                ans_prefix = 'Файл:'
-                            ans = "\n".join(
-                                [ans, " -- ".join([ans_prefix, os.path.basename(x), ct,
-                                                   str_fsize(float(r.headers.get('content-length')))])])
-                    else:
-                        ans = "1/ Нет такого адреса :'("
-                except:
-                    ans = "2/ Нет такого адреса :'("
+                                ans_prefix = ''
+                            ans = u"\n".join(
+                                [ans, ans_prefix + ' ' + u" — ".join(
+                                    [os.path.basename(x), ct, str_fsize(float(head.get('content-length')))])])
 
+                    else:
+                        ans = u"1/ Нет такого адреса :'("
+                except RuntimeError:
+                    ans = u"2/ Нет такого адреса :'("
         return ans
 
     def urlWatcher(self, stanza, isConf, stype, source, body, isToBs, disp):
         if len(body) < 500:
-            answer = self.urlParser(body, "Заголовок: %s")
+            answer = self.urlParser(body, u"Заголовок: %s")
             if answer:
-                Message(source[1], answer, disp)
+                if isConf:
+                    Message(source[1], answer, disp)
+                else:
+                    Answer(answer, stype, source, disp)
 
     handlers = ((urlWatcher, "01eh"),)
 
