@@ -53,12 +53,9 @@ def get_group_stats(vk, date_from=datetime.today(), date_to=datetime.today()):
         for period in response:
             visitors = 'Посетителей: %s' % period['visitors']
             views = 'Просмотров: %s' % period['views']
-            views = 'Просмотров: %s' % period['views']
-            views = 'Просмотров: %s' % period['views']
-
-
-
-            ans = '\n'.join([ans, '\n'.join([visitors,views])])
+            subscribed = 'Подписались: %s' % period['subscribed']
+            unsubscribed = 'Отписались: %s' % period['unsubscribed']
+            ans = '\n'.join([ans, '\n'.join([visitors, views, subscribed, unsubscribed])])
         return ans
 
 
@@ -103,7 +100,7 @@ class expansion_temp(expansion):
                 else:
                     Answer(get_wall_post(self.vk), stype, source, disp)
             elif args[0].lower() == 'стат':
-                if len(args)>1 and args[1].lower() == 'сегодня':
+                if len(args) > 1 and args[1].lower() == 'сегодня':
                     Answer(get_group_stats(self.vk), stype, source, disp)
 
         else:
