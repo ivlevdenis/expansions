@@ -11,21 +11,12 @@ import requests
 from lxml import html
 
 
-def html_decode(s):
-    # htmlCodes = (
-    #     (u"'", u'&#39;'), (u'"', u'&quot;'), (u'>', u'&gt;'), (u'<', u'&lt;'), (u'&', u'&amp;'), (u' ', u'&nbsp;'),
-    #     (u'—', u'&mdash;'), (u'!', u'&#33;'))
-    # for code in htmlCodes:
-    #     s = s.replace(code[1], code[0])
-    return html.fromstring(s).text
-
-
 def parsing(txt):
     title = re.search('<title[^>]*>([^<]+)</title>', txt, re.IGNORECASE)
     if title:
         title = title.group(1)
-        title = re.sub('\s+', ' ', title, re.IGNORECASE)
-        return html_decode(title)
+        title = re.sub('\s+', ' ', title)
+        return html.fromstring(title).text
     else:
         return u'Не могу стащить заголовок :('
 
@@ -34,7 +25,6 @@ headers = {
     'Accept-Encoding': 'gzip, deflate',
     'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:31.0) Gecko/20100101 Firefox/31.0',
     'Connection': 'keep-alive',
-    'Cache-Control': 'max-age=0'
 }
 
 image_str = u'Изображение'
@@ -73,25 +63,12 @@ def get_headers(url):
     return r.headers
 
 
-def get_content(url, enc):
-    r = requests.get(url, headers=headers)
-    if not r.content:
-        r.close()
-        r = requests.post(url, headers=headers)
-    if not enc or (enc.lower() != str(requests.utils.get_encodings_from_content(r.text)[0]).lower()):
-        enc = requests.utils.get_encodings_from_content(r.text)[0]
-    r.encoding = enc
-    r.close()
-    cont = unicode(r.text)
-    return cont
-
-
 class expansion_temp(expansion):
     def __init__(self, name):
         expansion.__init__(self, name)
 
 
-    def urlParser(self, body, begin_string):
+    def urlParser(self, body):
         url_list = re.findall(
             r'http[s]?://(?:[а-яА-ЯёЁa-zA-Z0-9]|[$-_@.&+]|[!*\(\),]|(?:%[а-яА-ЯёЁa-zA-Z0-9][а-яА-ЯёЁa-zA-Z0-9]))+',
             body,
@@ -106,17 +83,27 @@ class expansion_temp(expansion):
                     if head:
                         ct = head.get('content-type')
                         if 'text/html' in ct:
-                            title = parsing(get_content(x, requests.utils.get_encoding_from_headers(head)))
-                            ans = u"\n".join([ans, title])
+                            cont = requests.get(x, headers=headers)
+                            if not cont.text:
+                                cont = requests.post(x, headers=headers)
+                            enc_head = requests.utils.get_encoding_from_headers(head)
+                            enc_cont = requests.utils.get_encodings_from_content(cont.text)
+                            if len(enc_cont) > 0:
+                                if isinstance(enc_cont, list):
+                                    enc = enc_cont[0]
+                                else:
+                                    enc = enc_head
+                            cont.encoding = enc
+                            title = parsing(cont.text)
+                            ans = u"\n".join([ans, u"Заголовок: %s" % title])
                         else:
                             if str(ct).split('/')[0] in mime_answers.keys():
                                 ans_prefix = mime_answers[str(ct).split('/')[0]] + ':'
                             else:
                                 ans_prefix = ''
-                            ans = u"\n".join(
-                                [ans, ans_prefix + ' ' + u" — ".join(
-                                    [os.path.basename(x), ct, str_fsize(float(head.get('content-length')))])])
-
+                            size = head.get('content-length') if head.get('content-length') else '0'
+                            ans = u"\n".join([ans, ans_prefix + ' ' + u" — ".join(
+                                [os.path.basename(x), ct, str_fsize(float(size))])])
                     else:
                         ans = u"1/ Нет такого адреса :'("
                 except RuntimeError:
@@ -125,9 +112,9 @@ class expansion_temp(expansion):
 
     def urlWatcher(self, stanza, isConf, stype, source, body, isToBs, disp):
         if len(body) < 500:
-            answer = self.urlParser(body, u"Заголовок: %s")
+            answer = self.urlParser(body)
             if answer:
-                if isConf:
+                if isConf and not isToBs:
                     Message(source[1], answer, disp)
                 else:
                     Answer(answer, stype, source, disp)
