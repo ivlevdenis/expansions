@@ -7,7 +7,9 @@
 
 import vk_api
 from datetime import datetime
-from config import *
+
+LOGIN = u''
+PASSWORD = u''
 
 
 def vk_login():
@@ -48,7 +50,6 @@ def get_group_stats(vk, date_from=datetime.today(), date_to=datetime.today()):
     }
     response = vk.method('stats.get', values)
     ans = ''
-    print(response)
     if response:
         for period in response:
             visitors = 'Посетителей: %s' % period['visitors']
@@ -100,9 +101,12 @@ class expansion_temp(expansion):
                 else:
                     Answer(get_wall_post(self.vk), stype, source, disp)
             elif args[0].lower() == 'стат':
-                if len(args) > 1 and args[1].lower() == 'сегодня':
-                    Answer(get_group_stats(self.vk), stype, source, disp)
-
+                if len(args) > 1:
+                    if args[1].lower() == 'сегодня':
+                        Answer(get_group_stats(self.vk), stype, source, disp)
+                    elif args[1].lower() == 'вчера':
+                        yesterday = datetime.fromordinal(datetime.today().toordinal() - 1)
+                        Answer(get_group_stats(self.vk, yesterday, yesterday), stype, source, disp)
         else:
             Answer(get_group_info(self.vk), stype, source, disp)
 
