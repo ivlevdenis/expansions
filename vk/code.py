@@ -7,11 +7,10 @@
 
 import vk_api
 from datetime import datetime
-import re
 
-LOGIN = u''
+LOGIN = u'' # telephone number
 PASSWORD = u''
-
+GROUP_ID = 0 # integer
 
 def vk_login():
     login, password = LOGIN, PASSWORD
@@ -23,7 +22,7 @@ def vk_login():
 
 
 def get_group_info(vk):
-    group_id = 33241
+    group_id = GROUP_ID
     values = {
         'group_id': group_id,
         'fields': 'city,country,description,members_count,counters'
@@ -48,7 +47,7 @@ def get_group_stats(vk, date_from=datetime.today(), date_to=datetime.today()):
             for item in big_list:
                 yield item
 
-    group_id = 33241
+    group_id = GROUP_ID
     values = {
         'group_id': group_id,
         'date_from': date_from.strftime('%Y-%m-%d'),
@@ -73,7 +72,7 @@ def get_wall_post(vk, count=1, offset=0):
     if count < 1:
         count = 1
     values = {
-        'owner_id': -33241,
+        'owner_id': -1 * GROUP_ID,
         'count': count,
         'offset': offset
     }
@@ -115,6 +114,12 @@ class expansion_temp(expansion):
                     elif args[1].lower() == 'вчера':
                         yesterday = datetime.fromordinal(datetime.today().toordinal() - 1)
                         Answer(get_group_stats(self.vk, yesterday, yesterday), stype, source, disp)
+                    elif args[1].lower() == 'год':
+                        day = datetime(datetime.today().year,1,1)
+                        Answer(get_group_stats(self.vk, day), stype, source, disp)
+                    elif args[1].lower() == 'месяц':
+                        day = datetime(datetime.today().year,datetime.today().month,1)
+                        Answer(get_group_stats(self.vk, day), stype, source, disp)
                     elif args[1].lower() == 'годназад':
                         day = datetime.today().replace(year=datetime.today().year - 1)
                         Answer(get_group_stats(self.vk, day, day), stype, source, disp)
