@@ -91,8 +91,8 @@ class expansion_temp(expansion):
                             if len(enc_cont) > 0:
                                 if isinstance(enc_cont, list):
                                     enc = enc_cont[0]
-                                else:
-                                    enc = enc_head
+                            else:
+                                enc = enc_head
                             cont.encoding = enc
                             title = parsing(cont.text)
                             ans = u"\n".join([ans, u"Заголовок: %s" % title])
