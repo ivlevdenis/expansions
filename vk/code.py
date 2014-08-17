@@ -1,9 +1,9 @@
 # coding: utf-8
 
 # BlackSmith mark.2
-# exp_name = "turn" # /code.py v.x3
+# exp_name = "vk" # /code.py v.x3
 # Id: 21~3c
-# Code © (2011-2012) by WitcherGeralt [alkorgun@gmail.com]
+# Code © (2011-2014) by den4ik [ivlevdenis.ru@gmail.com]
 
 import vk_api
 from datetime import datetime
