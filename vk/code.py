@@ -43,6 +43,11 @@ def get_group_info(vk):
 
 
 def get_group_stats(vk, date_from=datetime.today(), date_to=datetime.today()):
+    def generator(big_list):
+        if isinstance(big_list, list):
+            for item in big_list:
+                yield item
+
     group_id = 33241
     values = {
         'group_id': group_id,
@@ -51,13 +56,14 @@ def get_group_stats(vk, date_from=datetime.today(), date_to=datetime.today()):
     }
     response = vk.method('stats.get', values)
     ans = ''
+
     if response:
-        for period in response:
-            visitors = 'Посетителей: %s' % period['visitors']
-            views = 'Просмотров: %s' % period['views']
-            subscribed = 'Подписались: %s' % period['subscribed']
-            unsubscribed = 'Отписались: %s' % period['unsubscribed']
-            ans = '\n'.join([ans, '\n'.join([visitors, views, subscribed, unsubscribed])])
+        visitors = 'Посетителей: %d' % sum([int(x['visitors']) for x in generator(response) if x['visitors']])
+        views = 'Просмотров: %d' % sum([int(x['views']) for x in generator(response) if x['views']])
+        subscribed = 'Подписались: %d' % sum([int(x['subscribed']) for x in generator(response) if x['subscribed']])
+        unsubscribed = 'Отписались: %d' % sum(
+            [int(x['unsubscribed']) for x in generator(response) if x['unsubscribed']])
+        ans = '\n'.join([visitors, views, subscribed, unsubscribed])
         return ans
 
 
@@ -93,6 +99,7 @@ class expansion_temp(expansion):
 
     def command_vk(self, stype, source, body, disp):
         args = str(body).split()
+        print(args)
         if len(args) > 0:
             if args[0].lower() == 'стена':
                 if len(args) > 2 and str(args[1]).isdigit() and str(args[2]).isdigit():
@@ -111,13 +118,26 @@ class expansion_temp(expansion):
                     elif args[1].lower() == 'годназад':
                         day = datetime.today().replace(year=datetime.today().year - 1)
                         Answer(get_group_stats(self.vk, day, day), stype, source, disp)
-                    elif args[1].lower() == 'дата' and len(args)>2:
-                        print(args[2])
-                        if re.match('\d{2}-\d{2}-\d{4}', str(args[2])):
+                    elif args[1].lower() == 'дата' and len(args) > 2:
+                        try:
                             day = datetime.strptime(str(args[2]), '%d-%m-%Y')
                             Answer(get_group_stats(self.vk, day, day), stype, source, disp)
-                        else:
+                        except ValueError as e:
                             Answer('Неправильный формат даты, пример: 14-08-2014.', stype, source, disp)
+                    elif args[1].lower() == 'период' and len(args) > 3:
+                        try:
+                            day1 = datetime.strptime(str(args[2]), '%d-%m-%Y')
+                            day2 = datetime.strptime(str(args[3]), '%d-%m-%Y')
+                        except ValueError as e:
+                            Answer('Неправильный формат даты, пример: 14-08-2014.', stype, source, disp)
+                        if day2.toordinal() > day1.toordinal():
+                            if day2.year - day1.year < 4:
+                                Answer(get_group_stats(self.vk, day1, day2), stype, source, disp)
+                            else:
+                                Answer('Слишком большой период для запроса статистики.', stype, source, disp)
+                        else:
+                            Answer('Начальная дата не может быть больше конечной.', stype, source, disp)
+
         else:
             Answer(get_group_info(self.vk), stype, source, disp)
 
