@@ -142,6 +142,7 @@ class expansion_temp(expansion):
                                 Answer('Слишком большой период для запроса статистики.', stype, source, disp)
                         else:
                             Answer('Начальная дата не может быть больше конечной.', stype, source, disp)
+                Answer('Недопустимый синтаксис.', stype, source, disp)
 
         else:
             Answer(get_group_info(self.vk), stype, source, disp)
