@@ -107,6 +107,9 @@ class expansion_temp(expansion):
                     elif args[1].lower() == 'вчера':
                         yesterday = datetime.fromordinal(datetime.today().toordinal() - 1)
                         Answer(get_group_stats(self.vk, yesterday, yesterday), stype, source, disp)
+                    elif args[1].lower() == 'годназад':
+                        day = datetime.today().replace(year=datetime.today().year - 1)
+                        Answer(get_group_stats(self.vk, day, day), stype, source, disp)
         else:
             Answer(get_group_info(self.vk), stype, source, disp)
 
