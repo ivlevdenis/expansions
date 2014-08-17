@@ -12,6 +12,7 @@ LOGIN = u'' # telephone number
 PASSWORD = u''
 GROUP_ID = 0 # integer
 
+
 def vk_login():
     login, password = LOGIN, PASSWORD
     try:
@@ -62,7 +63,9 @@ def get_group_stats(vk, date_from=datetime.today(), date_to=datetime.today()):
         subscribed = 'Подписались: %d' % sum([int(x['subscribed']) for x in generator(response) if x['subscribed']])
         unsubscribed = 'Отписались: %d' % sum(
             [int(x['unsubscribed']) for x in generator(response) if x['unsubscribed']])
-        ans = '\n'.join([visitors, views, subscribed, unsubscribed])
+        sex_male = '♂ - %d' % sum([int(x['sex']['visitors']) for x in generator(response) if x['sex']['value'] == 'm'])
+        sex_female = '♀ - %d' % sum([int(x['sex']['visitors']) for x in generator(response) if x['sex']['value'] == 'f'])
+        ans = '\n'.join([visitors, views, subscribed, unsubscribed, sex_male + ' ' + sex_female])
         return ans
 
 
@@ -84,8 +87,8 @@ def get_wall_post(vk, count=1, offset=0):
                 '%d.%m.%Y %H:%M:%S')
             text = 'Запись: %s' % item['text']
             comments = 'Прокомментировали: %d' % int(item['comments']['count'])
-            likes = 'Понравилось: %d' % int(item['likes']['count'])
-            can_publish = 'Поделились: %d' % int(item['likes']['can_publish'])
+            likes = '♥ - %d' % int(item['likes']['count'])
+            can_publish = '♲ - %d' % int(item['likes']['can_publish'])
             ans = '\n'.join([ans, '\n'.join([text, date, likes, can_publish, comments])])
         return ans
 
@@ -115,10 +118,10 @@ class expansion_temp(expansion):
                         yesterday = datetime.fromordinal(datetime.today().toordinal() - 1)
                         Answer(get_group_stats(self.vk, yesterday, yesterday), stype, source, disp)
                     elif args[1].lower() == 'год':
-                        day = datetime(datetime.today().year,1,1)
+                        day = datetime(datetime.today().year, 1, 1)
                         Answer(get_group_stats(self.vk, day), stype, source, disp)
                     elif args[1].lower() == 'месяц':
-                        day = datetime(datetime.today().year,datetime.today().month,1)
+                        day = datetime(datetime.today().year, datetime.today().month, 1)
                         Answer(get_group_stats(self.vk, day), stype, source, disp)
                     elif args[1].lower() == 'годназад':
                         day = datetime.today().replace(year=datetime.today().year - 1)
