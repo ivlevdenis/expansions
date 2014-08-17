@@ -7,6 +7,7 @@
 
 import vk_api
 from datetime import datetime
+import re
 
 LOGIN = u''
 PASSWORD = u''
@@ -110,6 +111,13 @@ class expansion_temp(expansion):
                     elif args[1].lower() == 'годназад':
                         day = datetime.today().replace(year=datetime.today().year - 1)
                         Answer(get_group_stats(self.vk, day, day), stype, source, disp)
+                    elif args[1].lower() == 'дата' and len(args)>2:
+                        print(args[2])
+                        if re.match('\d{2}-\d{2}-\d{4}', str(args[2])):
+                            day = datetime.strptime(str(args[2]), '%d-%m-%Y')
+                            Answer(get_group_stats(self.vk, day, day), stype, source, disp)
+                        else:
+                            Answer('Неправильный формат даты, пример: 14-08-2014.', stype, source, disp)
         else:
             Answer(get_group_info(self.vk), stype, source, disp)
 
