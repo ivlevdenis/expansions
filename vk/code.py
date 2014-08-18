@@ -105,12 +105,13 @@ def get_topics(vk, group_id, count=1, offset=0):
         if count > items_count:
             count = items_count
         for item in response['items']:
-            date = 'Опубликован: {}'.format(datetime.fromtimestamp(int(item['created'])).strftime(
+            date = '⌚ - {}'.format(datetime.fromtimestamp(int(item['created'])).strftime(
                 '%d.%m.%Y %H:%M:%S'))
             title = 'Название: {}'.format(item['title'])
             comments = 'Комментариев: {}'.format(int(item['comments']))
-            id = 'id: {}'.format(int(item['id']))
-            ans = '\n\n'.join([ans, '\n'.join([title, comments, date, id])])
+            tid = '# - {}'.format(int(item['id']))
+            link = 'https://vk.com/topic-{0}_{1}'.format(group_id, int(item['id']))
+            ans = '\n\n'.join([ans, '\n'.join([title, comments, date + ' ' + tid, link])])
         return ans
 
 
@@ -157,14 +158,60 @@ class expansion_temp(expansion):
         expansion.__init__(self, name)
         self.confn = os.path.join(os.getcwd(), 'expansions', 'vk', 'vk.cfg')
         self.vk_config = json.load(open(self.confn))
+        self.chats = self.vk_config['chats']
+        self.__old_topic_commets_count = 0
+        self.__old_topic_id = 0
+        self.__old_comment_time = 0
         self.vk = vk_login(self.vk_config['login'], self.vk_config['password'])
-        self.group_id = int(self.vk_config['group'])
-        self.watch_topics = self.vk_config['watch_topics']
+        self.group_id = None
 
+    def topic_watcher(self):
+
+        def watch(chatn, vk, groupid, topicid):
+            values_comments = {
+                'group_id': groupid,
+                'topic_id': topicid,
+                'count': 1,
+                'offset': 0,
+                'sort': 'desc'
+            }
+            values_topic_info = {
+                'group_id': groupid,
+                'topic_ids': topicid
+            }
+            response_comments = vk.method('board.getComments', values_comments)
+            response_topic_info = vk.method('board.getTopics', values_topic_info)
+            topic_title = response_topic_info['items'][0]['title']
+            ans = ''
+            if response_comments and len(response_comments['items']) > 0:
+                item = response_comments['items'][0]
+                items_count = response_comments['count']
+                if self.__old_topic_commets_count != int(items_count) and int(self.__old_comment_time) < int(
+                        item['date']):
+                    self.__old_comment_time = int(item['date'])
+                    new_comments_count = items_count - self.__old_topic_commets_count
+                    self.__old_topic_commets_count = items_count
+                    prefix = 'Новый коментарий в теме "{}"'.format(topic_title)
+                    text = '{}'.format(item['text'])
+                    comment_id = int(item['id'])
+                    link = 'https://vk.com/topic-{0}_{1}?post={2}'.format(groupid, topicid, comment_id)
+                    ans = '\n'.join([prefix, text, link])
+                    Message(chatn, ans)
+
+        while len(Chats) > 0 and len(self.vk_config['chats']) > 0:
+            for chat in self.vk_config['chats']:
+                chat_name = tuple(chat)[0]
+                if chat_name in Chats:
+                    for group in chat[chat_name]['groups']:
+                        g_id = tuple(group)[0]
+                        for t_id in group[g_id]['watch_topics']:
+                            watch(chat_name, self.vk, int(g_id), int(t_id))
+            sleep(10)
 
     def command_vk(self, stype, source, body, disp):
         args = str(body).split()
         post_temp = 'https://vk.com/topic-{0}_{1}?post={2}'
+        self.group_id = self.vk_config['chats'][0]['ubuntulinux@conference.jabber.ru']['groups'][0]
         if len(args) > 0:
             if args[0].lower() == 'стена':
                 if len(args) > 2 and str(args[1]).isdigit() and str(args[2]).isdigit():
@@ -172,7 +219,7 @@ class expansion_temp(expansion):
                 elif len(args) > 1 and str(args[1]).isdigit():
                     Answer(get_wall_post(self.vk, self.group_id, int(args[1])), stype, source, disp)
                 else:
-                    Answer(get_wall_post(self.vk), stype, source, disp)
+                    Answer(get_wall_post(self.vk, self.group_id), stype, source, disp)
             elif args[0].lower() == 'стат':
                 if len(args) > 1:
                     if args[1].lower() == 'сегодня':
@@ -199,15 +246,16 @@ class expansion_temp(expansion):
                         try:
                             day1 = datetime.strptime(str(args[2]), '%d-%m-%Y')
                             day2 = datetime.strptime(str(args[3]), '%d-%m-%Y')
+                            if day2.toordinal() > day1.toordinal():
+                                if day2.year - day1.year < 4:
+                                    Answer(get_group_stats(self.vk, self.group_id, day1, day2), stype, source, disp)
+                                else:
+                                    Answer('Слишком большой период для запроса статистики.', stype, source, disp)
+                            else:
+                                Answer('Начальная дата не может быть больше конечной.', stype, source, disp)
                         except ValueError as e:
                             Answer('Неправильный формат даты, пример: 14-08-2014.', stype, source, disp)
-                        if day2.toordinal() > day1.toordinal():
-                            if day2.year - day1.year < 4:
-                                Answer(get_group_stats(self.vk, self.group_id, day1, day2), stype, source, disp)
-                            else:
-                                Answer('Слишком большой период для запроса статистики.', stype, source, disp)
-                        else:
-                            Answer('Начальная дата не может быть больше конечной.', stype, source, disp)
+
             elif args[0].lower() == 'топик':
                 if len(args) > 2 and str(args[1]).isdigit():
                     if args[2].lower() == 'коммент':
@@ -226,8 +274,7 @@ class expansion_temp(expansion):
                             Answer(get_topic_comments(self.vk, self.group_id, int(args[1]), int(args[3])),
                                    stype, source, disp)
                         else:
-                            Answer(get_topic_comments(self.vk, self.group_id, int(args[1])), stype, source,
-                                   disp)
+                            Answer(get_topic_comments(self.vk, self.group_id, int(args[1])), stype, source, disp)
                 else:
                     Answer('Неправильный формат запроса.', stype, source, disp)
             elif args[0].lower() == 'топики':
@@ -235,9 +282,12 @@ class expansion_temp(expansion):
                     Answer(get_topics(self.vk, self.group_id, int(args[1])), stype, source, disp)
                 else:
                     Answer(get_topics(self.vk, self.group_id), stype, source, disp)
-
+                    print(stype, source, disp)
         else:
             Answer(get_group_info(self.vk, self.group_id), stype, source, disp)
 
+    def start_watchers(self, *args):
+        composeThr(self.topic_watcher, 'topic_watcher').start()
 
     commands = ((command_vk, "vk", 1,),)
+    handlers = ((start_watchers, "01si"),)
