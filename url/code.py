@@ -55,7 +55,7 @@ def str_fsize(sz):
 
 
 def get_headers(url):
-    r = requests.head(url)
+    r = requests.head(url, verify=False)
     if r.status_code != requests.codes.ok:
         r.close()
         r = requests.get(url, verify=False)
@@ -83,9 +83,9 @@ class expansion_temp(expansion):
                     if head:
                         ct = head.get('content-type')
                         if 'text/html' in ct:
-                            cont = requests.get(x, headers=headers)
+                            cont = requests.get(x,verify=False, headers=headers)
                             if not cont.text:
-                                cont = requests.post(x, headers=headers)
+                                cont = requests.post(x,verify=False, headers=headers)
                             enc_head = requests.utils.get_encoding_from_headers(head)
                             enc_cont = requests.utils.get_encodings_from_content(cont.text)
                             if len(enc_cont) > 0:
