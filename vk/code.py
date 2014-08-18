@@ -11,7 +11,6 @@ import json
 from datetime import datetime
 
 
-
 def vk_login(login, password):
     try:
         return vk_api.VkApi(login, password)  # Авторизируемся
@@ -20,7 +19,7 @@ def vk_login(login, password):
         return None  # и выйдем
 
 
-def get_group_info(vk,group_id):
+def get_group_info(vk, group_id):
     values = {
         'group_id': group_id,
         'fields': 'city,country,description,members_count,counters'
@@ -29,12 +28,12 @@ def get_group_info(vk,group_id):
     ans = ''
     if response:
         for r in response:
-            name = 'Имя: %s' % r['name']
-            city = 'Город: %s' % r['city']['title']
-            description = 'Описание: %s' % r['description']
-            members_count = 'Друзья: %d' % int(r['members_count'])
-            country = 'Страна: %s' % r['country']['title']
-            link = 'http://vk.com/%s' % r['screen_name']
+            name = 'Имя: {}'.format(r['name'])
+            city = 'Город: {}'.format(r['city']['title'])
+            description = 'Описание: {}'.format(r['description'])
+            members_count = 'Друзья: {}'.format(int(r['members_count']))
+            country = 'Страна: {}'.format(r['country']['title'])
+            link = 'http://vk.com/{}'.format(r['screen_name'])
             ans = '\n'.join([ans, '\n'.join([name, description, city, country, members_count, link])])
         return ans
 
@@ -48,23 +47,23 @@ def get_group_stats(vk, group_id, date_from=datetime.today(), date_to=datetime.t
     response = vk.method('stats.get', values)
     ans = ''
     if response:
-        visitors = 'Посетителей: %d' % sum([int(x['visitors']) for x in response if x['visitors']])
-        views = 'Просмотров: %d' % sum([int(x['views']) for x in response if x['views']])
-        subscribed = 'Подписались: %d' % sum([int(x['subscribed']) for x in response if x['subscribed']])
-        unsubscribed = 'Отписались: %d' % sum(
-            [int(x['unsubscribed']) for x in response if x['unsubscribed']])
+        visitors = 'Посетителей: {}'.format(sum([int(x['visitors']) for x in response if x['visitors']]))
+        views = 'Просмотров: {}'.format(sum([int(x['views']) for x in response if x['views']]))
+        subscribed = 'Подписались: {}'.format(sum([int(x['subscribed']) for x in response if x['subscribed']]))
+        unsubscribed = 'Отписались: {}'.format(sum(
+            [int(x['unsubscribed']) for x in response if x['unsubscribed']]))
         sex_male = 0
         sex_female = 0
         for r in response:
             sex_male += sum([int(x['visitors']) for x in r['sex'] if x['value'] == 'm'])
             sex_female += sum([int(x['visitors']) for x in r['sex'] if x['value'] == 'f'])
-        sex_male = '♂ - %d' % sex_male
-        sex_female = '♀ - %d' % sex_female
+        sex_male = '♂ - {}'.format(sex_male)
+        sex_female = '♀ - {}'.format(sex_female)
         ans = '\n'.join([visitors, views, subscribed, unsubscribed, sex_male + ' ' + sex_female])
         return ans
 
 
-def get_wall_post(vk, group_id, date_from=datetime.today(), date_to=datetime.today()):
+def get_wall_post(vk, group_id, count=1, offset=0):
     if count > 10:
         count = 10
     if count < 1:
@@ -78,12 +77,12 @@ def get_wall_post(vk, group_id, date_from=datetime.today(), date_to=datetime.tod
     ans = ''
     if response:
         for item in response['items']:
-            date = 'Опубликован: %s' % datetime.fromtimestamp(int(item['date'])).strftime(
-                '%d.%m.%Y %H:%M:%S')
-            text = 'Запись: %s' % item['text']
-            comments = 'Комментариев: %d' % int(item['comments']['count'])
-            likes = '♥ - %d' % int(item['likes']['count'])
-            can_publish = '♲ - %d' % int(item['likes']['can_publish'])
+            date = 'Опубликован: {}'.format(datetime.fromtimestamp(int(item['date'])).strftime(
+                '%d.%m.%Y %H:%M:%S'))
+            text = 'Запись: {}'.format(item['text'])
+            comments = 'Комментариев: {}'.format(int(item['comments']['count']))
+            likes = '♥ - {}'.format(int(item['likes']['count']))
+            can_publish = '♲ - {}'.format(int(item['likes']['can_publish']))
             ans = '\n'.join([ans, '\n'.join([text, date, can_publish + ' ' + likes, comments])])
         return ans
 
@@ -106,11 +105,11 @@ def get_topics(vk, group_id, count=1, offset=0):
         if count > items_count:
             count = items_count
         for item in response['items']:
-            date = 'Опубликован: %s' % datetime.fromtimestamp(int(item['created'])).strftime(
-                '%d.%m.%Y %H:%M:%S')
-            title = 'Название: %s' % item['title']
-            comments = 'Комментариев: %d' % int(item['comments'])
-            id = 'id: %d' % int(item['id'])
+            date = 'Опубликован: {}'.format(datetime.fromtimestamp(int(item['created'])).strftime(
+                '%d.%m.%Y %H:%M:%S'))
+            title = 'Название: {}'.format(item['title'])
+            comments = 'Комментариев: {}'.format(int(item['comments']))
+            id = 'id: {}'.format(int(item['id']))
             ans = '\n\n'.join([ans, '\n'.join([title, comments, date, id])])
         return ans
 
@@ -145,10 +144,10 @@ def get_topic_comments(vk, group_id, topic_id, count=1, offset=0, order=0):
             count = items_count
         if len(response['items']) > 0:
             for item in response['items']:
-                date = 'Опубликован: %s' % datetime.fromtimestamp(int(item['date'])).strftime(
-                    '%d.%m.%Y %H:%M:%S')
-                text = 'Сообщение: %s' % item['text']
-                id = 'id: %d' % int(item['id'])
+                date = 'Опубликован: {}'.format(datetime.fromtimestamp(int(item['date'])).strftime(
+                    '%d.%m.%Y %H:%M:%S'))
+                text = 'Сообщение: {}'.format(item['text'])
+                id = 'id: {}'.format(int(item['id']))
                 ans = '\n\n'.join([ans, '\n'.join([text, date, id])])
         return ans
 
@@ -156,7 +155,7 @@ def get_topic_comments(vk, group_id, topic_id, count=1, offset=0, order=0):
 class expansion_temp(expansion):
     def __init__(self, name):
         expansion.__init__(self, name)
-        self.confn = os.path.join(os.getcwd(), 'expansions','vk', 'vk.cfg')
+        self.confn = os.path.join(os.getcwd(), 'expansions', 'vk', 'vk.cfg')
         self.vk_config = json.load(open(self.confn))
         self.vk = vk_login(self.vk_config['login'], self.vk_config['password'])
         self.group_id = int(self.vk_config['group'])
@@ -165,6 +164,7 @@ class expansion_temp(expansion):
 
     def command_vk(self, stype, source, body, disp):
         args = str(body).split()
+        post_temp = 'https://vk.com/topic-{0}_{1}?post={2}'
         if len(args) > 0:
             if args[0].lower() == 'стена':
                 if len(args) > 2 and str(args[1]).isdigit() and str(args[2]).isdigit():
@@ -176,7 +176,7 @@ class expansion_temp(expansion):
             elif args[0].lower() == 'стат':
                 if len(args) > 1:
                     if args[1].lower() == 'сегодня':
-                        Answer(get_group_stats(self.vk, self.group_id,), stype, source, disp)
+                        Answer(get_group_stats(self.vk, self.group_id, ), stype, source, disp)
                     elif args[1].lower() == 'вчера':
                         yesterday = datetime.fromordinal(datetime.today().toordinal() - 1)
                         Answer(get_group_stats(self.vk, self.group_id, yesterday, yesterday), stype, source, disp)
@@ -209,27 +209,35 @@ class expansion_temp(expansion):
                         else:
                             Answer('Начальная дата не может быть больше конечной.', stype, source, disp)
             elif args[0].lower() == 'топик':
-                if len(args) > 1:
-                    if str(args[1]).isdigit():
-                        if len(args) > 2:
-                            if args[2].lower() == 'коммент':
-                                try:
-                                    link = 'https://vk.com/topic-%s_%d' % [args[1], comment_topic(self.vk, int(args[1]),
-                                                                                                  ' '.join(args[3:]))]
-                                    Answer('Комментарий успешно добавлен.\n' + link, stype, source, disp)
-                                except vk_api.ApiError as e:
-                                    Answer('Ошибка комментирования.', stype, source, disp)
-                            elif args[2].lower() == 'читать':
-                                if len(args) > 3 and str(args[3]).isdigit():
-                                    Answer(get_topic_comments(self.vk, self.group_id, int(args[1]), int(args[3])), stype, source, disp)
-                                else:
-                                    Answer(get_topic_comments(self.vk, self.group_id, int(args[1])), stype, source, disp)
+                if len(args) > 2 and str(args[1]).isdigit():
+                    if args[2].lower() == 'коммент':
+                        try:
+                            link = post_temp.format(self.group_id, args[1],
+                                                    comment_topic(self.vk, self.group_id, int(args[1]),
+                                                                  ' '.join(args[3:])))
+                            Answer('Комментарий успешно добавлен.\n' + link, stype, source, disp)
+                        except vk_api.ApiError as e:
+                            Answer('Ошибка комментирования.', stype, source, disp)
+                    elif args[2].lower() == 'читать':
+                        if len(args) > 4 and str(args[3]).isdigit() and str(args[3]).isdigit():
+                            Answer(get_topic_comments(self.vk, self.group_id, int(args[1]), int(args[3]),
+                                                      int(args[4])), stype, source, disp)
+                        elif len(args) > 3 and str(args[3]).isdigit():
+                            Answer(get_topic_comments(self.vk, self.group_id, int(args[1]), int(args[3])),
+                                   stype, source, disp)
                         else:
-                            Answer(get_topics(self.vk, int(args[1])), stype, source, disp)
+                            Answer(get_topic_comments(self.vk, self.group_id, int(args[1])), stype, source,
+                                   disp)
                 else:
-                    Answer(get_topics(self.vk,self.group_id), stype, source, disp)
+                    Answer('Неправильный формат запроса.', stype, source, disp)
+            elif args[0].lower() == 'топики':
+                if len(args) > 1 and str(args[1]).isdigit():
+                    Answer(get_topics(self.vk, self.group_id, int(args[1])), stype, source, disp)
+                else:
+                    Answer(get_topics(self.vk, self.group_id), stype, source, disp)
+
         else:
-            Answer(get_group_info(self.vk,self.group_id), stype, source, disp)
+            Answer(get_group_info(self.vk, self.group_id), stype, source, disp)
 
 
     commands = ((command_vk, "vk", 1,),)
