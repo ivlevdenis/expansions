@@ -27,11 +27,9 @@ headers = {
     'Connection': 'keep-alive',
 }
 
-image_str = u'Изображение'
-video_str = u'Видео'
 mime_answers = {
-    'image': image_str,
-    'video': video_str
+    'image': u'Изображение',
+    'video': u'Видео'
 }
 
 
@@ -57,9 +55,7 @@ def str_fsize(sz):
 def get_headers(url):
     r = requests.head(url, verify=False)
     if r.status_code != requests.codes.ok:
-        r.close()
         r = requests.get(url, verify=False)
-        r.close()
     return r.headers
 
 
@@ -73,8 +69,6 @@ class expansion_temp(expansion):
             r'http[s]?://(?:[а-яА-ЯёЁa-zA-Z0-9]|[$-_@.&+]|[!*\(\),]|(?:%[а-яА-ЯёЁa-zA-Z0-9][а-яА-ЯёЁa-zA-Z0-9]))+',
             body,
             re.IGNORECASE)
-        # url_list = re.findall(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', body,
-        # re.IGNORECASE)
         ans = ""
         if url_list:
             for x in url_list:
@@ -83,24 +77,20 @@ class expansion_temp(expansion):
                     if head:
                         ct = head.get('content-type')
                         if 'text/html' in ct:
-                            cont = requests.get(x,verify=False, headers=headers)
+                            cont = requests.get(x, verify=False, headers=headers)
                             if not cont.text:
-                                cont = requests.post(x,verify=False, headers=headers)
-                            enc_head = requests.utils.get_encoding_from_headers(head)
+                                cont = requests.post(x, verify=False, headers=headers)
+                            enc = requests.utils.get_encoding_from_headers(head)
                             enc_cont = requests.utils.get_encodings_from_content(cont.text)
                             if len(enc_cont) > 0:
-                                if isinstance(enc_cont, list):
-                                    enc = enc_cont[0]
-                            else:
-                                enc = enc_head
+                                enc = enc_cont[0] if isinstance(enc_cont, list) else enc_cont
                             cont.encoding = enc
                             title = parsing(cont.text)
                             ans = u"\n".join([ans, u"Заголовок: %s" % title])
                         else:
+                            ans_prefix = ''
                             if str(ct).split('/')[0] in mime_answers.keys():
                                 ans_prefix = mime_answers[str(ct).split('/')[0]] + ':'
-                            else:
-                                ans_prefix = ''
                             size = head.get('content-length') if head.get('content-length') else '0'
                             ans = u"\n".join([ans, ans_prefix + ' ' + u" — ".join(
                                 [os.path.basename(x), ct, str_fsize(float(size))])])
